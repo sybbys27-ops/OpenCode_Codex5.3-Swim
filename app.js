@@ -7,7 +7,7 @@ const PHASES = ["Idle", "Catch", "Pull", "Push", "Recovery", "ExtendedForward"];
 const defaults = {
   rollingAngle: 45,
   strokeInterval: 4,
-  glideHold: 0.5,
+  glideHold: 1.0,
   bodyPitch: -1,
 };
 
@@ -60,6 +60,10 @@ const ui = {
   rollCanvas: document.getElementById("rollCanvas"),
   rollText: document.getElementById("rollText"),
 };
+
+const bgm = new Audio("./bensound-sadday.mp3");
+bgm.loop = true;
+bgm.volume = 0.42;
 
 const sim = {
   config: { ...defaults },
@@ -409,6 +413,9 @@ function startSimulation() {
 
   ui.resultCard.classList.add("hidden");
   setInputsLocked(true);
+
+  // Browser autoplay policy allows this because Start is a user gesture.
+  bgm.play().catch(() => {});
 }
 
 function stopSimulation() {
@@ -417,6 +424,7 @@ function stopSimulation() {
     sim.phase = "Stopped";
   }
   setInputsLocked(false);
+  bgm.pause();
 }
 
 function resetSimulation() {
@@ -442,6 +450,8 @@ function resetSimulation() {
   }
   refreshControlText();
   setInputsLocked(false);
+  bgm.pause();
+  bgm.currentTime = 0;
 }
 
 function isEditable() {
@@ -617,6 +627,7 @@ function checkFinish() {
   sim.distance = 50;
   sim.phase = "Finished";
   setInputsLocked(false);
+  bgm.pause();
 
   ui.resultTime.textContent = `${sim.elapsed.toFixed(1)}s`;
   ui.resultFinalSpeed.textContent = `${sim.speedKmh.toFixed(2)} km/h`;
