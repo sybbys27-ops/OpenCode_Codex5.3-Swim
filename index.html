@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Freestyle Auto Simulation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="panel panel-left">
+        <h2>Parameter Controls</h2>
+        <p class="muted">Tune cadence and posture, then start.</p>
+
+        <div class="control" data-key="rollingAngle">
+          <label>Rolling Angle <span id="rollingAngleValue">45°</span></label>
+          <input id="rollingAngle" type="range" min="0" max="75" step="1" value="45" />
+          <small>0° - 75°</small>
+        </div>
+
+        <div class="control" data-key="strokeInterval">
+          <label>Stroke Interval <span id="strokeIntervalValue">4.0s</span></label>
+          <input id="strokeInterval" type="range" min="2" max="6" step="0.5" value="4" />
+          <small>2.0s - 6.0s</small>
+        </div>
+
+        <div class="control" data-key="glideHold">
+          <label>Glide Hold <span id="glideHoldValue">0.5s</span></label>
+          <input id="glideHold" type="range" min="0" max="2" step="0.1" value="0.5" />
+          <small>0.0s - 2.0s</small>
+        </div>
+
+        <div class="control" data-key="bodyPitch">
+          <label>Body Pitch <span id="bodyPitchValue">-1°</span></label>
+          <input id="bodyPitch" type="range" min="-5" max="5" step="1" value="-1" />
+          <small>-5° - +5°</small>
+        </div>
+
+        <div class="button-row">
+          <button id="startBtn" class="btn btn-primary">Start</button>
+          <button id="stopBtn" class="btn">Stop</button>
+          <button id="resetBtn" class="btn">Reset Defaults</button>
+        </div>
+
+        <section class="snapshot">
+          <h3>Session Snapshot</h3>
+          <div class="mini-grid">
+            <div><span>Elapsed</span><strong id="snapshotElapsed">0.0s</strong></div>
+            <div><span>Distance</span><strong id="snapshotDistance">0.0m</strong></div>
+            <div><span>Speed</span><strong id="snapshotSpeed">1.50 km/h</strong></div>
+            <div><span>Energy</span><strong id="snapshotEnergy">100%</strong></div>
+          </div>
+          <div class="mini-grid stroke-counts">
+            <div><span>Left</span><strong id="leftCount">0</strong></div>
+            <div><span>Right</span><strong id="rightCount">0</strong></div>
+            <div><span>Total</span><strong id="totalCount">0</strong></div>
+          </div>
+        </section>
+      </aside>
+
+      <main class="center-stage-wrap">
+        <div class="top-status">
+          <div class="status-pill">State: <strong id="currentState">Stopped</strong></div>
+          <div class="status-pill">Active Arm: <strong id="activeArm">None</strong></div>
+          <div class="status-pill">Roll: <strong id="currentRoll">0.0°</strong></div>
+          <div class="status-pill">Glide Left: <strong id="glideLeft">0.0s</strong></div>
+          <div class="status-pill">L Phase: <strong id="leftPhase">Idle</strong></div>
+          <div class="status-pill">R Phase: <strong id="rightPhase">Idle</strong></div>
+        </div>
+
+        <div class="center-stage-card">
+          <div id="threeContainer"></div>
+
+          <div class="distance-card">
+            <span>Virtual Distance</span>
+            <strong id="distanceTop">0.0 / 50.0 m</strong>
+            <div class="progress-track"><i id="distanceBar"></i></div>
+          </div>
+
+          <div class="camera-controls">
+            <button class="btn btn-mini" data-camera="side">Side</button>
+            <button class="btn btn-mini" data-camera="top">Top</button>
+            <button class="btn btn-mini" data-camera="front">Front</button>
+          </div>
+
+          <div class="roll-indicator" id="rollIndicator">
+            <canvas id="rollCanvas" width="120" height="120"></canvas>
+            <div id="rollText">Roll 0.0°</div>
+          </div>
+
+          <div class="energy-bar-wrap">
+            <span>Energy</span>
+            <div class="progress-track energy"><i id="energyBar"></i></div>
+            <strong id="energyText">100%</strong>
+          </div>
+        </div>
+      </main>
+
+      <aside class="panel panel-right">
+        <h2>Real-time Analytics</h2>
+        <p class="muted">Rolling, pace, and effort trends.</p>
+
+        <div class="analytics-grid">
+          <div><span>Current Speed</span><strong id="currentSpeed">1.50 km/h</strong></div>
+          <div><span>Average Speed</span><strong id="avgSpeed">1.50 km/h</strong></div>
+          <div><span>Elapsed Time</span><strong id="elapsed">0.0s</strong></div>
+          <div><span>Glide Remaining</span><strong id="glideRemaining">0.0s</strong></div>
+        </div>
+
+        <section class="chart-card">
+          <header><span>Speed Curve</span><strong id="speedHeadline">1.50 km/h</strong></header>
+          <canvas id="speedChart" width="360" height="90"></canvas>
+        </section>
+
+        <section class="chart-card">
+          <header><span>Energy Curve</span><strong id="energyHeadline">100%</strong></header>
+          <canvas id="energyChart" width="360" height="90"></canvas>
+        </section>
+
+        <section class="chart-card">
+          <header><span>Roll Curve</span><strong id="rollHeadline">0.0°</strong></header>
+          <canvas id="rollChart" width="360" height="90"></canvas>
+        </section>
+
+        <section class="phase-block">
+          <h3>Phase Timeline</h3>
+          <div class="phase-row"><span>Left</span><div id="leftPhaseTimeline"></div></div>
+          <div class="phase-row"><span>Right</span><div id="rightPhaseTimeline"></div></div>
+        </section>
+
+        <section class="result-card hidden" id="resultCard">
+          <h3>50m Result</h3>
+          <div class="mini-grid">
+            <div><span>Total Time</span><strong id="resultTime">-</strong></div>
+            <div><span>Final Speed</span><strong id="resultFinalSpeed">-</strong></div>
+            <div><span>Average Speed</span><strong id="resultAvgSpeed">-</strong></div>
+            <div><span>Final Energy</span><strong id="resultFinalEnergy">-</strong></div>
+          </div>
+        </section>
+      </aside>
+    </div>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+      }
+    </script>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
